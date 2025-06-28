@@ -86,12 +86,29 @@ services/
    npm install
    ```
 
-3. **Start the development server**
+3. **Set up environment variables**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env file with your WooCommerce credentials
+   # You can use any text editor
+   nano .env
+   ```
+   
+   **Required Environment Variables:**
+   ```bash
+   EXPO_PUBLIC_WOOCOMMERCE_URL=https://your-store.com/wp-json/wc/v3
+   EXPO_PUBLIC_CONSUMER_KEY=your_consumer_key
+   EXPO_PUBLIC_CONSUMER_SECRET=your_consumer_secret
+   ```
+
+4. **Start the development server**
    ```bash
    npm start
    ```
 
-4. **Run the app**
+5. **Run the app**
    - Scan QR code with Expo Go (iOS/Android)
    - Press `w` for web version
    - Press `a` for Android emulator
@@ -144,14 +161,26 @@ npm run lint       # Run ESLint
 ```
 
 ### **Environment Setup**
-The app uses hardcoded WooCommerce credentials. For production, move these to environment variables:
+The app uses environment variables for WooCommerce API credentials for security:
 
-```typescript
-// services/woocommerce.ts
-const API_URL = process.env.EXPO_PUBLIC_WOOCOMMERCE_URL;
-const CONSUMER_KEY = process.env.EXPO_PUBLIC_CONSUMER_KEY;
-const CONSUMER_SECRET = process.env.EXPO_PUBLIC_CONSUMER_SECRET;
+**Required Environment Variables:**
+```bash
+# .env file
+EXPO_PUBLIC_WOOCOMMERCE_URL=https://your-store.com/wp-json/wc/v3
+EXPO_PUBLIC_CONSUMER_KEY=your_consumer_key_here
+EXPO_PUBLIC_CONSUMER_SECRET=your_consumer_secret_here
 ```
+
+**How to set up:**
+1. Copy `.env.example` to `.env`
+2. Fill in your actual WooCommerce API credentials
+3. The `.env` file is gitignored for security
+
+**Getting WooCommerce API Credentials:**
+1. Go to your WordPress admin → WooCommerce → Settings → Advanced → REST API
+2. Click "Add Key"
+3. Set permissions to "Read/Write"
+4. Copy the Consumer Key and Consumer Secret
 
 ## 🧪 Testing
 
@@ -225,3 +254,30 @@ For support, email your-email@example.com or create an issue in this repository.
 ---
 
 **Built with ❤️ using React Native and Expo**
+
+## 🔒 Security Best Practices
+
+### **API Credentials**
+- ✅ API credentials are stored in environment variables
+- ✅ `.env` file is gitignored to prevent exposure
+- ✅ `.env.example` provides template without secrets
+- ⚠️ Never commit API keys to version control
+
+### **Environment Files**
+```bash
+.env              # Your actual credentials (gitignored)
+.env.example      # Template file (committed to repo)
+.env.local        # Local overrides (gitignored)
+```
+
+### **Production Deployment**
+- Set environment variables in your deployment platform
+- Use secure secrets management (e.g., Vercel, Netlify, AWS Secrets Manager)
+- Regularly rotate API keys
+- Monitor API usage for unusual activity
+
+### **Repository Safety**
+- Review git history before making repo public
+- Use `git filter-branch` if credentials were previously committed
+- Enable GitHub secret scanning
+- Set up branch protection rules

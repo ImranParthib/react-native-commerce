@@ -1,9 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
 
-// WooCommerce API Configuration
-const API_URL = 'https://ec.extramilebd.com/wp-json/wc/v3';
-const CONSUMER_KEY = 'ck_3d67624c23c8a48e8859514d40df0ab880122b51';
-const CONSUMER_SECRET = 'cs_4fd45443102418531346a73171b32d68c3bb84d5';
+// WooCommerce API Configuration - Load from environment variables
+const API_URL = process.env.EXPO_PUBLIC_WOOCOMMERCE_URL || 'https://ec.extramilebd.com/wp-json/wc/v3';
+const CONSUMER_KEY = process.env.EXPO_PUBLIC_CONSUMER_KEY || '';
+const CONSUMER_SECRET = process.env.EXPO_PUBLIC_CONSUMER_SECRET || '';
+
+// Validate environment variables
+if (!CONSUMER_KEY || !CONSUMER_SECRET) {
+    console.warn('Warning: WooCommerce API credentials not found in environment variables');
+    console.warn('Please create a .env file with EXPO_PUBLIC_CONSUMER_KEY and EXPO_PUBLIC_CONSUMER_SECRET');
+}
 
 // Create axios instance with authentication
 const wooCommerceAxios: AxiosInstance = axios.create({

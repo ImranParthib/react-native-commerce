@@ -1,4 +1,12 @@
 import { ProductCard } from '@/components/commerce';
+import {
+  getGridColumns,
+  getResponsiveBorderRadius,
+  getResponsiveFontSize,
+  getResponsiveSpacing,
+  getTypographyScale,
+  useResponsive
+} from '@/hooks/useResponsive';
 import { Product, wooCommerceApi } from '@/services/woocommerce';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -13,6 +21,10 @@ export default function ProductsScreen() {
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const { width, fontScale, breakpoint, isSmallPhone, isTablet } = useResponsive();
+
+  const typography = getTypographyScale(breakpoint);
+  const numColumns = getGridColumns(width, isSmallPhone ? 160 : isTablet ? 200 : 180);
 
   const fetchProducts = useCallback(async (pageNum = 1, search = '', reset = false) => {
     try {
@@ -80,7 +92,7 @@ export default function ProductsScreen() {
   };
 
   const renderProduct = ({ item }: { item: Product }) => (
-    <ProductCard product={item} />
+    <ProductCard product={item} containerWidth={width} />
   );
 
   const renderFooter = () => {
@@ -92,32 +104,79 @@ export default function ProductsScreen() {
     );
   };
 
+  const dynamicStyles = {
+    headerTitle: {
+      ...styles.headerTitle,
+      fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+    },
+    searchInput: {
+      ...styles.searchInput,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+      paddingHorizontal: getResponsiveSpacing(16, width, breakpoint),
+      paddingVertical: getResponsiveSpacing(12, width, breakpoint),
+      borderRadius: getResponsiveBorderRadius(8, breakpoint),
+    },
+    clearButton: {
+      ...styles.clearButton,
+      marginLeft: getResponsiveSpacing(12, width, breakpoint),
+      paddingVertical: getResponsiveSpacing(8, width, breakpoint),
+      paddingHorizontal: getResponsiveSpacing(12, width, breakpoint),
+      borderRadius: getResponsiveBorderRadius(6, breakpoint),
+    },
+    clearButtonText: {
+      ...styles.clearButtonText,
+      fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+    },
+    header: {
+      ...styles.header,
+      padding: getResponsiveSpacing(20, width, breakpoint),
+      paddingTop: isTablet ? getResponsiveSpacing(40, width, breakpoint) : 60,
+    },
+    listContainer: {
+      ...styles.listContainer,
+      padding: getResponsiveSpacing(8, width, breakpoint),
+    },
+    loadingText: {
+      ...styles.loadingText,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+      marginTop: getResponsiveSpacing(16, width, breakpoint),
+    },
+    emptyText: {
+      ...styles.emptyText,
+      fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+    },
+    emptySubtext: {
+      ...styles.emptySubtext,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+    },
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading products...</Text>
+        <Text style={dynamicStyles.loadingText}>Loading products...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
+      <View style={dynamicStyles.header}>
+        <Text style={dynamicStyles.headerTitle}>
           {categoryName ? `${categoryName}` : 'All Products'}
         </Text>
         <View style={styles.searchContainer}>
           <TextInput
-            style={styles.searchInput}
+            style={dynamicStyles.searchInput}
             placeholder="Search products..."
             value={searchQuery}
             onChangeText={handleSearch}
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity style={styles.clearButton} onPress={clearSearch}>
-              <Text style={styles.clearButtonText}>Clear</Text>
+            <TouchableOpacity style={dynamicStyles.clearButton} onPress={clearSearch}>
+              <Text style={dynamicStyles.clearButtonText}>Clear</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -126,9 +185,10 @@ export default function ProductsScreen() {
       <FlatList
         data={products}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
+        keyExtractor={(item, index) => `product-${item.id}-${index}`}
+        numColumns={numColumns}
+        key={numColumns} // Force re-render when columns change
+        contentContainerStyle={dynamicStyles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -138,10 +198,10 @@ export default function ProductsScreen() {
         ListFooterComponent={renderFooter}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
+            <Text style={dynamicStyles.emptyText}>
               {searchQuery ? 'No products found for your search' : 'No products found'}
             </Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={dynamicStyles.emptySubtext}>
               {searchQuery ? 'Try a different search term' : 'Pull to refresh and try again'}
             </Text>
           </View>

@@ -1,4 +1,11 @@
 import { useCart } from '@/contexts/CartContext';
+import {
+    getResponsiveBorderRadius,
+    getResponsiveFontSize,
+    getResponsiveSpacing,
+    getTypographyScale,
+    useResponsive
+} from '@/hooks/useResponsive';
 import { CreateOrderData, wooCommerceApi } from '@/services/woocommerce';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -19,6 +26,10 @@ interface CustomerInfo {
 
 export default function CheckoutScreen() {
     const { state, clearCart } = useCart();
+    const { width, fontScale, breakpoint, isSmallPhone, isTablet } = useResponsive();
+
+    const typography = getTypographyScale(breakpoint);
+
     const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
         firstName: '',
         lastName: '',
@@ -145,35 +156,124 @@ export default function CheckoutScreen() {
         }
     };
 
+    const dynamicStyles = {
+        container: {
+            ...styles.container,
+        },
+        header: {
+            ...styles.header,
+            padding: getResponsiveSpacing(20, width, breakpoint),
+            paddingTop: isTablet ? getResponsiveSpacing(40, width, breakpoint) : 60,
+        },
+        headerTitle: {
+            ...styles.headerTitle,
+            fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+        },
+        headerSubtitle: {
+            ...styles.headerSubtitle,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        section: {
+            ...styles.section,
+            margin: getResponsiveSpacing(16, width, breakpoint),
+            padding: getResponsiveSpacing(16, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(8, breakpoint),
+        },
+        sectionTitle: {
+            ...styles.sectionTitle,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+            marginBottom: getResponsiveSpacing(16, width, breakpoint),
+        },
+        input: {
+            ...styles.input,
+            paddingHorizontal: getResponsiveSpacing(16, width, breakpoint),
+            paddingVertical: getResponsiveSpacing(12, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(8, breakpoint),
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+            marginBottom: getResponsiveSpacing(12, width, breakpoint),
+        },
+        halfInput: {
+            width: isSmallPhone ? '100%' as const : '48%' as const,
+        },
+        row: {
+            ...styles.row,
+            flexDirection: (isSmallPhone ? 'column' : 'row') as 'row' | 'column',
+            justifyContent: (isSmallPhone ? 'flex-start' : 'space-between') as 'flex-start' | 'space-between',
+        },
+        placeOrderButton: {
+            ...styles.placeOrderButton,
+            margin: getResponsiveSpacing(16, width, breakpoint),
+            paddingVertical: getResponsiveSpacing(16, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(8, breakpoint),
+            marginBottom: getResponsiveSpacing(32, width, breakpoint),
+        },
+        placeOrderButtonText: {
+            ...styles.placeOrderButtonText,
+            fontSize: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint),
+        },
+        paymentMethodText: {
+            ...styles.paymentMethodText,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        paymentMethodSubtext: {
+            ...styles.paymentMethodSubtext,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        orderItemName: {
+            ...styles.orderItemName,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        orderItemDetails: {
+            ...styles.orderItemDetails,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        orderItemTotal: {
+            ...styles.orderItemTotal,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        totalLabel: {
+            ...styles.totalLabel,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+        },
+        totalAmount: {
+            ...styles.totalAmount,
+            fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+        },
+    };
+
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Checkout</Text>
-                <Text style={styles.headerSubtitle}>
+        <ScrollView style={dynamicStyles.container}>
+            <View style={dynamicStyles.header}>
+                <Text style={dynamicStyles.headerTitle}>Checkout</Text>
+                <Text style={dynamicStyles.headerSubtitle}>
                     {state.itemCount} items • Total: ${state.total.toFixed(2)}
                 </Text>
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Customer Information</Text>
+            <View style={dynamicStyles.section}>
+                <Text style={dynamicStyles.sectionTitle}>Customer Information</Text>
 
-                <View style={styles.row}>
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="First Name"
-                        value={customerInfo.firstName}
-                        onChangeText={(text) => updateCustomerInfo('firstName', text)}
-                    />
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="Last Name"
-                        value={customerInfo.lastName}
-                        onChangeText={(text) => updateCustomerInfo('lastName', text)}
-                    />
+                <View style={dynamicStyles.row}>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="First Name"
+                            value={customerInfo.firstName}
+                            onChangeText={(text) => updateCustomerInfo('firstName', text)}
+                        />
+                    </View>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="Last Name"
+                            value={customerInfo.lastName}
+                            onChangeText={(text) => updateCustomerInfo('lastName', text)}
+                        />
+                    </View>
                 </View>
 
                 <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     placeholder="Email"
                     value={customerInfo.email}
                     onChangeText={(text) => updateCustomerInfo('email', text)}
@@ -182,7 +282,7 @@ export default function CheckoutScreen() {
                 />
 
                 <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     placeholder="Phone"
                     value={customerInfo.phone}
                     onChangeText={(text) => updateCustomerInfo('phone', text)}
@@ -190,81 +290,89 @@ export default function CheckoutScreen() {
                 />
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Shipping Address</Text>
+            <View style={dynamicStyles.section}>
+                <Text style={dynamicStyles.sectionTitle}>Shipping Address</Text>
 
                 <TextInput
-                    style={styles.input}
+                    style={dynamicStyles.input}
                     placeholder="Address"
                     value={customerInfo.address}
                     onChangeText={(text) => updateCustomerInfo('address', text)}
                 />
 
-                <View style={styles.row}>
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="City"
-                        value={customerInfo.city}
-                        onChangeText={(text) => updateCustomerInfo('city', text)}
-                    />
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="State"
-                        value={customerInfo.state}
-                        onChangeText={(text) => updateCustomerInfo('state', text)}
-                    />
+                <View style={dynamicStyles.row}>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="City"
+                            value={customerInfo.city}
+                            onChangeText={(text) => updateCustomerInfo('city', text)}
+                        />
+                    </View>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="State"
+                            value={customerInfo.state}
+                            onChangeText={(text) => updateCustomerInfo('state', text)}
+                        />
+                    </View>
                 </View>
 
-                <View style={styles.row}>
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="Postal Code"
-                        value={customerInfo.postcode}
-                        onChangeText={(text) => updateCustomerInfo('postcode', text)}
-                    />
-                    <TextInput
-                        style={[styles.input, styles.halfInput]}
-                        placeholder="Country"
-                        value={customerInfo.country}
-                        onChangeText={(text) => updateCustomerInfo('country', text)}
-                    />
+                <View style={dynamicStyles.row}>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="Postal Code"
+                            value={customerInfo.postcode}
+                            onChangeText={(text) => updateCustomerInfo('postcode', text)}
+                        />
+                    </View>
+                    <View style={dynamicStyles.halfInput}>
+                        <TextInput
+                            style={dynamicStyles.input}
+                            placeholder="Country"
+                            value={customerInfo.country}
+                            onChangeText={(text) => updateCustomerInfo('country', text)}
+                        />
+                    </View>
                 </View>
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Payment Method</Text>
+            <View style={dynamicStyles.section}>
+                <Text style={dynamicStyles.sectionTitle}>Payment Method</Text>
                 <View style={styles.paymentMethod}>
-                    <Text style={styles.paymentMethodText}>Cash on Delivery</Text>
-                    <Text style={styles.paymentMethodSubtext}>Pay when you receive your order</Text>
+                    <Text style={dynamicStyles.paymentMethodText}>Cash on Delivery</Text>
+                    <Text style={dynamicStyles.paymentMethodSubtext}>Pay when you receive your order</Text>
                 </View>
             </View>
 
             <View style={styles.orderSummary}>
-                <Text style={styles.sectionTitle}>Order Summary</Text>
-                {state.items.map((item) => (
-                    <View key={item.product.id} style={styles.orderItem}>
-                        <Text style={styles.orderItemName}>{item.product.name}</Text>
-                        <Text style={styles.orderItemDetails}>
+                <Text style={dynamicStyles.sectionTitle}>Order Summary</Text>
+                {state.items.map((item, index) => (
+                    <View key={`checkout-item-${item.product.id}-${index}`} style={styles.orderItem}>
+                        <Text style={dynamicStyles.orderItemName}>{item.product.name}</Text>
+                        <Text style={dynamicStyles.orderItemDetails}>
                             {item.quantity} × ${parseFloat(item.product.price).toFixed(2)}
                         </Text>
-                        <Text style={styles.orderItemTotal}>
+                        <Text style={dynamicStyles.orderItemTotal}>
                             ${(parseFloat(item.product.price) * item.quantity).toFixed(2)}
                         </Text>
                     </View>
                 ))}
 
                 <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Total:</Text>
-                    <Text style={styles.totalAmount}>${state.total.toFixed(2)}</Text>
+                    <Text style={dynamicStyles.totalLabel}>Total:</Text>
+                    <Text style={dynamicStyles.totalAmount}>${state.total.toFixed(2)}</Text>
                 </View>
             </View>
 
             <TouchableOpacity
-                style={[styles.placeOrderButton, loading && styles.placeOrderButtonDisabled]}
+                style={[dynamicStyles.placeOrderButton, loading && styles.placeOrderButtonDisabled]}
                 onPress={handlePlaceOrder}
                 disabled={loading}
             >
-                <Text style={styles.placeOrderButtonText}>
+                <Text style={dynamicStyles.placeOrderButtonText}>
                     {loading ? 'Placing Order...' : 'Place Order'}
                 </Text>
             </TouchableOpacity>

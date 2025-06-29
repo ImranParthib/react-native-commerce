@@ -1,20 +1,67 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    getOptimalCardWidth,
+    getResponsiveBorderRadius,
+    getResponsiveFontSize,
+    getResponsiveSpacing,
+    getTypographyScale,
+    useResponsive
+} from '../../hooks/useResponsive';
 import { Category } from '../../services/woocommerce';
 
 interface CategoryCardProps {
     category: Category;
     onPress: (category: Category) => void;
+    containerWidth?: number;
 }
 
-export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onPress }) => {
+export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onPress, containerWidth }) => {
+    const { width, fontScale, breakpoint, isSmallPhone, isTablet } = useResponsive();
+
+    // Calculate optimal card width using enhanced responsive utilities
+    const cardWidth = containerWidth
+        ? getOptimalCardWidth(containerWidth, isSmallPhone ? 160 : 180, isTablet ? 300 : 250, breakpoint)
+        : getOptimalCardWidth(width, isSmallPhone ? 160 : 180, isTablet ? 300 : 250, breakpoint);
+
+    const typography = getTypographyScale(breakpoint);
+
+    const dynamicStyles = {
+        container: {
+            ...styles.container,
+            width: cardWidth,
+            borderRadius: getResponsiveBorderRadius(12, breakpoint),
+            marginHorizontal: getResponsiveSpacing(8, width, breakpoint),
+            marginVertical: getResponsiveSpacing(6, width, breakpoint),
+        },
+        imageContainer: {
+            ...styles.imageContainer,
+            height: cardWidth * (isSmallPhone ? 0.7 : 0.67), // Adjust aspect ratio for small phones
+            borderTopLeftRadius: getResponsiveBorderRadius(12, breakpoint),
+            borderTopRightRadius: getResponsiveBorderRadius(12, breakpoint),
+        },
+        name: {
+            ...styles.name,
+            fontSize: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint),
+            lineHeight: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint) * 1.2,
+        },
+        count: {
+            ...styles.count,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        content: {
+            ...styles.content,
+            padding: getResponsiveSpacing(12, width, breakpoint),
+        },
+    };
+
     return (
         <TouchableOpacity
-            style={styles.container}
+            style={dynamicStyles.container}
             onPress={() => onPress(category)}
             activeOpacity={0.7}
         >
-            <View style={styles.imageContainer}>
+            <View style={dynamicStyles.imageContainer}>
                 {category.image?.src ? (
                     <Image
                         source={{ uri: category.image.src }}
@@ -28,11 +75,11 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onPress })
                 )}
             </View>
 
-            <View style={styles.content}>
-                <Text style={styles.name} numberOfLines={2}>
+            <View style={dynamicStyles.content}>
+                <Text style={dynamicStyles.name} numberOfLines={2}>
                     {category.name}
                 </Text>
-                <Text style={styles.count}>
+                <Text style={dynamicStyles.count}>
                     {category.count} {category.count === 1 ? 'product' : 'products'}
                 </Text>
             </View>
@@ -55,10 +102,11 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
         overflow: 'hidden',
+        // Remove fixed width to make it responsive
     },
     imageContainer: {
         width: '100%',
-        height: 120,
+        // Height will be set dynamically
     },
     image: {
         width: '100%',

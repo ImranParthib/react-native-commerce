@@ -1,4 +1,11 @@
 import { CategoryCard } from '@/components/commerce';
+import {
+  getGridColumns,
+  getResponsiveFontSize,
+  getResponsiveSpacing,
+  getTypographyScale,
+  useResponsive
+} from '@/hooks/useResponsive';
 import { Category, wooCommerceApi } from '@/services/woocommerce';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +15,10 @@ export default function CategoriesScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { width, fontScale, breakpoint, isSmallPhone, isTablet } = useResponsive();
+
+  const typography = getTypographyScale(breakpoint);
+  const numColumns = getGridColumns(width, isSmallPhone ? 160 : isTablet ? 220 : 180);
 
   const fetchCategories = async () => {
     try {
@@ -44,39 +55,73 @@ export default function CategoriesScreen() {
   };
 
   const renderCategory = ({ item }: { item: Category }) => (
-    <CategoryCard category={item} onPress={handleCategoryPress} />
+    <CategoryCard category={item} onPress={handleCategoryPress} containerWidth={width} />
   );
+
+  const dynamicStyles = {
+    headerTitle: {
+      ...styles.headerTitle,
+      fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+    },
+    headerSubtitle: {
+      ...styles.headerSubtitle,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+    },
+    header: {
+      ...styles.header,
+      padding: getResponsiveSpacing(20, width, breakpoint),
+      paddingTop: isTablet ? getResponsiveSpacing(40, width, breakpoint) : 60,
+    },
+    listContainer: {
+      ...styles.listContainer,
+      padding: getResponsiveSpacing(8, width, breakpoint),
+    },
+    loadingText: {
+      ...styles.loadingText,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+      marginTop: getResponsiveSpacing(16, width, breakpoint),
+    },
+    emptyText: {
+      ...styles.emptyText,
+      fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+    },
+    emptySubtext: {
+      ...styles.emptySubtext,
+      fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+    },
+  };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading categories...</Text>
+        <Text style={dynamicStyles.loadingText}>Loading categories...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Product Categories</Text>
-        <Text style={styles.headerSubtitle}>Choose a category to browse products</Text>
+      <View style={dynamicStyles.header}>
+        <Text style={dynamicStyles.headerTitle}>Product Categories</Text>
+        <Text style={dynamicStyles.headerSubtitle}>Choose a category to browse products</Text>
       </View>
 
       <FlatList
         data={categories}
         renderItem={renderCategory}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        contentContainerStyle={styles.listContainer}
+        keyExtractor={(item, index) => `category-${item.id}-${index}`}
+        numColumns={numColumns}
+        key={numColumns} // Force re-render when columns change
+        contentContainerStyle={dynamicStyles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No categories found</Text>
-            <Text style={styles.emptySubtext}>Pull to refresh and try again</Text>
+            <Text style={dynamicStyles.emptyText}>No categories found</Text>
+            <Text style={dynamicStyles.emptySubtext}>Pull to refresh and try again</Text>
           </View>
         )}
       />

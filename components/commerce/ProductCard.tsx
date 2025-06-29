@@ -1,16 +1,33 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCart } from '../../contexts/CartContext';
+import {
+    getOptimalCardWidth,
+    getResponsiveBorderRadius,
+    getResponsiveFontSize,
+    getResponsiveSpacing,
+    getTypographyScale,
+    useResponsive
+} from '../../hooks/useResponsive';
 import { Product } from '../../services/woocommerce';
 
 interface ProductCardProps {
     product: Product;
     onPress?: (product: Product) => void;
+    containerWidth?: number;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, containerWidth }) => {
     const { addToCart, getCartItem } = useCart();
     const cartItem = getCartItem(product.id);
+    const { width, fontScale, breakpoint, isSmallPhone, isTablet } = useResponsive();
+
+    // Calculate optimal card width using enhanced responsive utilities
+    const cardWidth = containerWidth
+        ? getOptimalCardWidth(containerWidth, isSmallPhone ? 160 : 180, isTablet ? 300 : 250, breakpoint)
+        : getOptimalCardWidth(width, isSmallPhone ? 160 : 180, isTablet ? 300 : 250, breakpoint);
+
+    const typography = getTypographyScale(breakpoint);
 
     const handleAddToCart = () => {
         addToCart(product, 1);
@@ -25,13 +42,73 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
         ? product.images[0].src
         : null;
 
+    const dynamicStyles = {
+        container: {
+            ...styles.container,
+            width: cardWidth,
+            borderRadius: getResponsiveBorderRadius(12, breakpoint),
+            marginHorizontal: getResponsiveSpacing(8, width, breakpoint),
+            marginVertical: getResponsiveSpacing(6, width, breakpoint),
+        },
+        imageContainer: {
+            ...styles.imageContainer,
+            height: cardWidth * (isSmallPhone ? 0.8 : 0.75), // Adjust aspect ratio for small phones
+            borderTopLeftRadius: getResponsiveBorderRadius(12, breakpoint),
+            borderTopRightRadius: getResponsiveBorderRadius(12, breakpoint),
+        },
+        name: {
+            ...styles.name,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+            minHeight: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint) * 2.5,
+            lineHeight: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint) * 1.3,
+        },
+        price: {
+            ...styles.price,
+            fontSize: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint),
+        },
+        regularPrice: {
+            ...styles.regularPrice,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        salePrice: {
+            ...styles.salePrice,
+            fontSize: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint),
+        },
+        addButtonText: {
+            ...styles.addButtonText,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        content: {
+            ...styles.content,
+            padding: getResponsiveSpacing(12, width, breakpoint),
+        },
+        addButton: {
+            ...styles.addButton,
+            paddingVertical: getResponsiveSpacing(8, width, breakpoint),
+            paddingHorizontal: getResponsiveSpacing(12, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(6, breakpoint),
+        },
+        saleTag: {
+            ...styles.saleTag,
+            top: getResponsiveSpacing(8, width, breakpoint),
+            right: getResponsiveSpacing(8, width, breakpoint),
+            paddingHorizontal: getResponsiveSpacing(8, width, breakpoint),
+            paddingVertical: getResponsiveSpacing(4, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(4, breakpoint),
+        },
+        saleText: {
+            ...styles.saleText,
+            fontSize: getResponsiveFontSize(10, fontScale, 1.3, breakpoint),
+        },
+    };
+
     return (
         <TouchableOpacity
-            style={styles.container}
+            style={dynamicStyles.container}
             onPress={() => onPress?.(product)}
             activeOpacity={0.7}
         >
-            <View style={styles.imageContainer}>
+            <View style={dynamicStyles.imageContainer}>
                 {mainImage ? (
                     <Image
                         source={{ uri: mainImage }}
@@ -45,39 +122,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
                 )}
 
                 {product.on_sale && (
-                    <View style={styles.saleTag}>
-                        <Text style={styles.saleText}>SALE</Text>
+                    <View style={dynamicStyles.saleTag}>
+                        <Text style={dynamicStyles.saleText}>SALE</Text>
                     </View>
                 )}
             </View>
 
-            <View style={styles.content}>
-                <Text style={styles.name} numberOfLines={2}>
+            <View style={dynamicStyles.content}>
+                <Text style={dynamicStyles.name} numberOfLines={2}>
                     {product.name}
                 </Text>
 
                 <View style={styles.priceContainer}>
                     {product.on_sale && product.regular_price !== product.sale_price ? (
                         <>
-                            <Text style={styles.regularPrice}>
+                            <Text style={dynamicStyles.regularPrice}>
                                 ${parseFloat(product.regular_price).toFixed(2)}
                             </Text>
-                            <Text style={styles.salePrice}>
+                            <Text style={dynamicStyles.salePrice}>
                                 {formatPrice(product.price)}
                             </Text>
                         </>
                     ) : (
-                        <Text style={styles.price}>
+                        <Text style={dynamicStyles.price}>
                             {formatPrice(product.price)}
                         </Text>
                     )}
                 </View>
 
                 <TouchableOpacity
-                    style={[styles.addButton, cartItem && styles.addButtonInCart]}
+                    style={[dynamicStyles.addButton, cartItem && styles.addButtonInCart]}
                     onPress={handleAddToCart}
                 >
-                    <Text style={[styles.addButtonText, cartItem && styles.addButtonTextInCart]}>
+                    <Text style={[dynamicStyles.addButtonText, cartItem && styles.addButtonTextInCart]}>
                         {cartItem ? `In Cart (${cartItem.quantity})` : 'Add to Cart'}
                     </Text>
                 </TouchableOpacity>
@@ -101,11 +178,11 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
         overflow: 'hidden',
-        width: 180,
+        // Remove fixed width to make it responsive
     },
     imageContainer: {
         width: '100%',
-        height: 140,
+        // Height will be set dynamically
         position: 'relative',
     },
     image: {

@@ -1,3 +1,10 @@
+import {
+    getResponsiveBorderRadius,
+    getResponsiveFontSize,
+    getResponsiveSpacing,
+    getTypographyScale,
+    useResponsive
+} from '@/hooks/useResponsive';
 import { wooCommerceApi } from '@/services/woocommerce';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
@@ -15,6 +22,9 @@ export default function OrdersScreen() {
     const [orders, setOrders] = useState<StoredOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const { width, fontScale, breakpoint, isTablet } = useResponsive();
+
+    const typography = getTypographyScale(breakpoint);
 
     const loadOrdersFromStorage = async () => {
         try {
@@ -79,48 +89,108 @@ export default function OrdersScreen() {
 
     const renderOrder = ({ item }: { item: StoredOrder }) => (
         <TouchableOpacity
-            style={styles.orderCard}
+            style={dynamicStyles.orderCard}
             onPress={() => fetchOrderDetails(item.id)}
             activeOpacity={0.7}
         >
             <View style={styles.orderHeader}>
-                <Text style={styles.orderNumber}>Order #{item.orderNumber}</Text>
+                <Text style={dynamicStyles.orderNumber}>Order #{item.orderNumber}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                    <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+                    <Text style={dynamicStyles.statusText}>{item.status.toUpperCase()}</Text>
                 </View>
             </View>
 
             <View style={styles.orderDetails}>
                 <View style={styles.orderRow}>
-                    <Text style={styles.orderLabel}>Total:</Text>
-                    <Text style={styles.orderValue}>${item.total}</Text>
+                    <Text style={dynamicStyles.orderLabel}>Total:</Text>
+                    <Text style={dynamicStyles.orderValue}>${item.total}</Text>
                 </View>
                 <View style={styles.orderRow}>
-                    <Text style={styles.orderLabel}>Date:</Text>
-                    <Text style={styles.orderValue}>
+                    <Text style={dynamicStyles.orderLabel}>Date:</Text>
+                    <Text style={dynamicStyles.orderValue}>
                         {new Date(item.dateCreated).toLocaleDateString()}
                     </Text>
                 </View>
             </View>
 
-            <Text style={styles.tapToView}>Tap to view details</Text>
+            <Text style={dynamicStyles.tapToView}>Tap to view details</Text>
         </TouchableOpacity>
     );
+
+    const dynamicStyles = {
+        header: {
+            ...styles.header,
+            padding: getResponsiveSpacing(20, width, breakpoint),
+            paddingTop: isTablet ? getResponsiveSpacing(40, width, breakpoint) : 60,
+        },
+        headerTitle: {
+            ...styles.headerTitle,
+            fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+        },
+        headerSubtitle: {
+            ...styles.headerSubtitle,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        orderCard: {
+            ...styles.orderCard,
+            borderRadius: getResponsiveBorderRadius(12, breakpoint),
+            padding: getResponsiveSpacing(16, width, breakpoint),
+            marginBottom: getResponsiveSpacing(12, width, breakpoint),
+            marginHorizontal: getResponsiveSpacing(16, width, breakpoint),
+        },
+        orderNumber: {
+            ...styles.orderNumber,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+        },
+        statusText: {
+            ...styles.statusText,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        orderValue: {
+            ...styles.orderValue,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        orderLabel: {
+            ...styles.orderLabel,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        tapToView: {
+            ...styles.tapToView,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        loadingText: {
+            ...styles.loadingText,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+            marginTop: getResponsiveSpacing(16, width, breakpoint),
+        },
+        emptyText: {
+            ...styles.emptyText,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+        },
+        emptySubtext: {
+            ...styles.emptySubtext,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        listContainer: {
+            ...styles.listContainer,
+            padding: getResponsiveSpacing(16, width, breakpoint),
+        },
+    };
 
     if (loading && !refreshing) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={styles.loadingText}>Loading orders...</Text>
+                <Text style={dynamicStyles.loadingText}>Loading orders...</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>My Orders</Text>
-                <Text style={styles.headerSubtitle}>
+            <View style={dynamicStyles.header}>
+                <Text style={dynamicStyles.headerTitle}>My Orders</Text>
+                <Text style={dynamicStyles.headerSubtitle}>
                     {orders.length} {orders.length === 1 ? 'order' : 'orders'}
                 </Text>
             </View>
@@ -128,16 +198,16 @@ export default function OrdersScreen() {
             <FlatList
                 data={orders}
                 renderItem={renderOrder}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.listContainer}
+                keyExtractor={(item, index) => `order-${item.id}-${index}`}
+                contentContainerStyle={dynamicStyles.listContainer}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
                 ListEmptyComponent={() => (
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No orders found</Text>
-                        <Text style={styles.emptySubtext}>
+                        <Text style={dynamicStyles.emptyText}>No orders found</Text>
+                        <Text style={dynamicStyles.emptySubtext}>
                             Your orders will appear here after you make a purchase
                         </Text>
                     </View>

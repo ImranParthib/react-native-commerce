@@ -1,6 +1,13 @@
 import React from 'react';
 import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CartItem, useCart } from '../../contexts/CartContext';
+import {
+    getResponsiveBorderRadius,
+    getResponsiveFontSize,
+    getResponsiveSpacing,
+    getTypographyScale,
+    useResponsive
+} from '../../hooks/useResponsive';
 
 interface CartItemComponentProps {
     item: CartItem;
@@ -12,6 +19,9 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({ item, onUpdateQua
     const { product, quantity } = item;
     const productPrice = parseFloat(product.price) || 0;
     const itemTotal = productPrice * quantity;
+    const { width, fontScale, isTablet, breakpoint, isSmallPhone } = useResponsive();
+
+    const typography = getTypographyScale(breakpoint);
 
     const mainImage = product.images && product.images.length > 0
         ? product.images[0].src
@@ -28,9 +38,64 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({ item, onUpdateQua
         );
     };
 
+    const dynamicStyles = {
+        cartItem: {
+            ...styles.cartItem,
+            marginHorizontal: getResponsiveSpacing(16, width, breakpoint),
+            padding: getResponsiveSpacing(12, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(8, breakpoint),
+        },
+        imageContainer: {
+            ...styles.imageContainer,
+            width: isSmallPhone ? 70 : isTablet ? 100 : 80,
+            height: isSmallPhone ? 70 : isTablet ? 100 : 80,
+            marginRight: getResponsiveSpacing(12, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(6, breakpoint),
+        },
+        itemName: {
+            ...styles.itemName,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+            lineHeight: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint) * 1.3,
+        },
+        itemPrice: {
+            ...styles.itemPrice,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        itemTotal: {
+            ...styles.itemTotal,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        quantity: {
+            ...styles.quantity,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+            minWidth: isSmallPhone ? 25 : 30,
+        },
+        quantityButton: {
+            ...styles.quantityButton,
+            width: isSmallPhone ? 26 : isTablet ? 36 : 30,
+            height: isSmallPhone ? 26 : isTablet ? 36 : 30,
+            borderRadius: getResponsiveBorderRadius(4, breakpoint),
+        },
+        quantityButtonText: {
+            ...styles.quantityButtonText,
+            fontSize: getResponsiveFontSize(typography.h3, fontScale, 1.3, breakpoint),
+        },
+        removeButton: {
+            ...styles.removeButton,
+            marginLeft: getResponsiveSpacing(isSmallPhone ? 8 : 16, width, breakpoint),
+            paddingVertical: getResponsiveSpacing(6, width, breakpoint),
+            paddingHorizontal: getResponsiveSpacing(isSmallPhone ? 8 : 12, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(4, breakpoint),
+        },
+        removeButtonText: {
+            ...styles.removeButtonText,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+    };
+
     return (
-        <View style={styles.cartItem}>
-            <View style={styles.imageContainer}>
+        <View style={dynamicStyles.cartItem}>
+            <View style={dynamicStyles.imageContainer}>
                 {mainImage ? (
                     <Image source={{ uri: mainImage }} style={styles.image} resizeMode="cover" />
                 ) : (
@@ -41,38 +106,38 @@ const CartItemComponent: React.FC<CartItemComponentProps> = ({ item, onUpdateQua
             </View>
 
             <View style={styles.itemDetails}>
-                <Text style={styles.itemName} numberOfLines={2}>
+                <Text style={dynamicStyles.itemName} numberOfLines={2}>
                     {product.name}
                 </Text>
-                <Text style={styles.itemPrice}>
+                <Text style={dynamicStyles.itemPrice}>
                     ${productPrice.toFixed(2)} each
                 </Text>
-                <Text style={styles.itemTotal}>
+                <Text style={dynamicStyles.itemTotal}>
                     Total: ${itemTotal.toFixed(2)}
                 </Text>
 
                 <View style={styles.quantityContainer}>
                     <TouchableOpacity
-                        style={styles.quantityButton}
+                        style={dynamicStyles.quantityButton}
                         onPress={() => onUpdateQuantity(product.id, quantity - 1)}
                     >
-                        <Text style={styles.quantityButtonText}>-</Text>
+                        <Text style={dynamicStyles.quantityButtonText}>-</Text>
                     </TouchableOpacity>
 
-                    <Text style={styles.quantity}>{quantity}</Text>
+                    <Text style={dynamicStyles.quantity}>{quantity}</Text>
 
                     <TouchableOpacity
-                        style={styles.quantityButton}
+                        style={dynamicStyles.quantityButton}
                         onPress={() => onUpdateQuantity(product.id, quantity + 1)}
                     >
-                        <Text style={styles.quantityButtonText}>+</Text>
+                        <Text style={dynamicStyles.quantityButtonText}>+</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles.removeButton}
+                        style={dynamicStyles.removeButton}
                         onPress={handleRemove}
                     >
-                        <Text style={styles.removeButtonText}>Remove</Text>
+                        <Text style={dynamicStyles.removeButtonText}>Remove</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -86,6 +151,9 @@ interface CartProps {
 
 export const Cart: React.FC<CartProps> = ({ onCheckout }) => {
     const { state, updateQuantity, removeFromCart, clearCart } = useCart();
+    const { width, fontScale, breakpoint, isSmallPhone } = useResponsive();
+
+    const typography = getTypographyScale(breakpoint);
 
     const handleClearCart = () => {
         if (state.items.length === 0) return;
@@ -100,29 +168,83 @@ export const Cart: React.FC<CartProps> = ({ onCheckout }) => {
         );
     };
 
+    const dynamicStyles = {
+        header: {
+            ...styles.header,
+            padding: getResponsiveSpacing(16, width, breakpoint),
+            borderBottomWidth: isSmallPhone ? 0.5 : 1,
+        },
+        headerTitle: {
+            ...styles.headerTitle,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+        },
+        clearButton: {
+            ...styles.clearButton,
+            fontSize: getResponsiveFontSize(typography.caption, fontScale, 1.3, breakpoint),
+        },
+        footer: {
+            ...styles.footer,
+            padding: getResponsiveSpacing(16, width, breakpoint),
+            borderTopWidth: isSmallPhone ? 0.5 : 1,
+        },
+        totalLabel: {
+            ...styles.totalLabel,
+            fontSize: getResponsiveFontSize(typography.h2, fontScale, 1.3, breakpoint),
+        },
+        totalAmount: {
+            ...styles.totalAmount,
+            fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+        },
+        checkoutButton: {
+            ...styles.checkoutButton,
+            paddingVertical: getResponsiveSpacing(14, width, breakpoint),
+            borderRadius: getResponsiveBorderRadius(8, breakpoint),
+        },
+        checkoutButtonText: {
+            ...styles.checkoutButtonText,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        emptyText: {
+            ...styles.emptyText,
+            fontSize: getResponsiveFontSize(typography.h1, fontScale, 1.3, breakpoint),
+        },
+        emptySubtext: {
+            ...styles.emptySubtext,
+            fontSize: getResponsiveFontSize(typography.body, fontScale, 1.3, breakpoint),
+        },
+        listContainer: {
+            ...styles.listContainer,
+            paddingVertical: getResponsiveSpacing(8, width, breakpoint),
+        },
+        emptyContainer: {
+            ...styles.emptyContainer,
+            padding: getResponsiveSpacing(32, width, breakpoint),
+        },
+    };
+
     if (state.items.length === 0) {
         return (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Your cart is empty</Text>
-                <Text style={styles.emptySubtext}>Add some products to get started!</Text>
+            <View style={dynamicStyles.emptyContainer}>
+                <Text style={dynamicStyles.emptyText}>Your cart is empty</Text>
+                <Text style={dynamicStyles.emptySubtext}>Add some products to get started!</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>
+            <View style={dynamicStyles.header}>
+                <Text style={dynamicStyles.headerTitle}>
                     Shopping Cart ({state.itemCount} {state.itemCount === 1 ? 'item' : 'items'})
                 </Text>
                 <TouchableOpacity onPress={handleClearCart}>
-                    <Text style={styles.clearButton}>Clear All</Text>
+                    <Text style={dynamicStyles.clearButton}>Clear All</Text>
                 </TouchableOpacity>
             </View>
 
             <FlatList
                 data={state.items}
-                keyExtractor={(item) => item.product.id.toString()}
+                keyExtractor={(item, index) => `cart-item-${item.product.id}-${index}`}
                 renderItem={({ item }) => (
                     <CartItemComponent
                         item={item}
@@ -131,18 +253,18 @@ export const Cart: React.FC<CartProps> = ({ onCheckout }) => {
                     />
                 )}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContainer}
+                contentContainerStyle={dynamicStyles.listContainer}
             />
 
-            <View style={styles.footer}>
+            <View style={dynamicStyles.footer}>
                 <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Total:</Text>
-                    <Text style={styles.totalAmount}>${state.total.toFixed(2)}</Text>
+                    <Text style={dynamicStyles.totalLabel}>Total:</Text>
+                    <Text style={dynamicStyles.totalAmount}>${state.total.toFixed(2)}</Text>
                 </View>
 
                 {onCheckout && (
-                    <TouchableOpacity style={styles.checkoutButton} onPress={onCheckout}>
-                        <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+                    <TouchableOpacity style={dynamicStyles.checkoutButton} onPress={onCheckout}>
+                        <Text style={dynamicStyles.checkoutButtonText}>Proceed to Checkout</Text>
                     </TouchableOpacity>
                 )}
             </View>

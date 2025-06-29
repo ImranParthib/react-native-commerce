@@ -14,7 +14,10 @@ A modern, full-featured e-commerce mobile app built with React Native, Expo, and
 
 ### 🎨 UI/UX
 - Clean, modern Material Design
-- Responsive grid layouts
+- **Advanced Responsive Design**: Optimized for all device sizes (phones to tablets)
+- **Smart Grid Layouts**: Dynamic columns based on screen size and orientation
+- **Adaptive Typography**: Breakpoint-aware font scaling with accessibility support
+- **Responsive Components**: All UI elements adapt seamlessly across devices
 - Pull-to-refresh & infinite scroll
 - Search with clear filters
 - Loading and error states
@@ -22,10 +25,19 @@ A modern, full-featured e-commerce mobile app built with React Native, Expo, and
 
 ### 🔧 Technical
 - **TypeScript**: End-to-end type safety
+- **Responsive Architecture**: Advanced breakpoint system with 5 device categories
 - **State Management**: React Context + AsyncStorage
 - **Navigation**: Expo Router (tab-based)
 - **API**: WooCommerce REST API via axios
 - **Offline Support**: Cart persists locally
+
+### 📱 Responsive Features
+- **5-Tier Breakpoint System**: xs, sm, md, lg, xl for precise device targeting
+- **Dynamic Grid Columns**: 1-5 columns based on screen size and content
+- **Smart Component Sizing**: Cards and layouts adapt to available space
+- **Orientation Awareness**: Seamless portrait/landscape transitions
+- **Accessibility Compliance**: Proper touch targets and font scaling
+- **Cross-Platform Consistency**: Unified experience across iOS, Android, and Web
 
 ## 🏗️ Architecture
 
